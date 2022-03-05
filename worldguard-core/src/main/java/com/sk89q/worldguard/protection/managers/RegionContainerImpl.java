@@ -80,7 +80,9 @@ public class RegionContainerImpl {
         checkNotNull(flagRegistry, "flagRegistry");
         this.driver = driver;
         timer.schedule(new BackgroundLoader(), LOAD_ATTEMPT_INTERVAL, LOAD_ATTEMPT_INTERVAL);
-        timer.schedule(new BackgroundSaver(), SAVE_INTERVAL, SAVE_INTERVAL);
+        if (Boolean.getBoolean("master_instance")) {
+            timer.schedule(new BackgroundSaver(), SAVE_INTERVAL, SAVE_INTERVAL);
+        }
         this.flagRegistry = flagRegistry;
     }
 
@@ -175,13 +177,15 @@ public class RegionContainerImpl {
      */
     public void unloadAll() {
         synchronized (lock) {
-            for (Map.Entry<Normal, RegionManager> entry : mapping.entrySet()) {
-                String name = entry.getKey().toString();
-                RegionManager manager = entry.getValue();
-                try {
-                    manager.saveChanges();
-                } catch (StorageException e) {
-                    log.log(Level.WARNING, "Failed to save the region data for '" + name + "' while unloading the data for all worlds", e);
+            if (Boolean.getBoolean("master_instance")) {
+                for (Map.Entry<Normal, RegionManager> entry : mapping.entrySet()) {
+                    String name = entry.getKey().toString();
+                    RegionManager manager = entry.getValue();
+                    try {
+                        manager.saveChanges();
+                    } catch (StorageException e) {
+                        log.log(Level.WARNING, "Failed to save the region data for '" + name + "' while unloading the data for all worlds", e);
+                    }
                 }
             }
 
