@@ -34,6 +34,7 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.regions.selector.CuboidRegionSelector;
 import com.sk89q.worldedit.regions.selector.Polygonal2DRegionSelector;
+import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.formatting.component.ErrorFormat;
 import com.sk89q.worldedit.util.formatting.component.SubtleFormat;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
@@ -48,6 +49,7 @@ import com.sk89q.worldguard.internal.permission.RegionPermissionModel;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.FlagContext;
+import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.flags.InvalidFlagFormat;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.GlobalProtectedRegion;
@@ -422,6 +424,11 @@ class RegionCommandsBase {
      */
     protected static <V> V setFlag(ProtectedRegion region, Flag<V> flag, Actor sender, String value) throws InvalidFlagFormat {
         V val = flag.parseInput(FlagContext.create().setSender(sender).setInput(value).setObject("region", region).build());
+
+        if ((flag == Flags.TELE_LOC || flag == Flags.SPAWN_LOC) && val instanceof Location location && !region.contains(location.toVector().toBlockPoint())) {
+            throw new InvalidFlagFormat("Location is outside region.");
+        }
+
         region.setFlag(flag, val);
         return val;
     }
