@@ -1218,6 +1218,10 @@ public final class RegionCommands extends RegionCommandsBase {
             message = Flags.TELE_MESSAGE.getDefault();
         }
 
+        if (!args.hasFlag('c') && !existing.contains(teleportLocation.toVector().toBlockPoint())) {
+            throw new CommandException("The region has no teleport point associated.");
+        }
+
         player.teleport(teleportLocation,
                 message.replace("%id%", existing.getId()),
                 "Unable to teleport to region '" + existing.getId() + "'.");
