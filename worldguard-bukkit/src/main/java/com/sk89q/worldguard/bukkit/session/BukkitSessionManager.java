@@ -19,6 +19,7 @@
 
 package com.sk89q.worldguard.bukkit.session;
 
+import com.github.puregero.multilib.MultiLib;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.WorldGuard;
@@ -54,7 +55,7 @@ public class BukkitSessionManager extends AbstractSessionManager implements Runn
      */
     @Override
     public void resetAllStates() {
-        Collection<? extends Player> players = Bukkit.getServer().getOnlinePlayers();
+        Collection<? extends Player> players = MultiLib.getAllOnlinePlayers();
         for (Player player : players) {
             BukkitPlayer bukkitPlayer = new BukkitPlayer(WorldGuardPlugin.inst(), player);
             Session session = getIfPresent(bukkitPlayer);
@@ -73,7 +74,7 @@ public class BukkitSessionManager extends AbstractSessionManager implements Runn
 
     @Override
     public void run() {
-        for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+        for (Player player : MultiLib.getAllOnlinePlayers()) {
             LocalPlayer localPlayer = WorldGuardPlugin.inst().wrapPlayer(player);
             get(localPlayer).tick(localPlayer);
         }

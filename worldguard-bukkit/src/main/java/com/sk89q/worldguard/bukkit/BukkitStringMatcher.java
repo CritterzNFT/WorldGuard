@@ -19,6 +19,7 @@
 
 package com.sk89q.worldguard.bukkit;
 
+import com.github.puregero.multilib.MultiLib;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -105,7 +106,7 @@ public class BukkitStringMatcher implements StringMatcher {
 
     @Override
     public List<LocalPlayer> matchPlayerNames(String filter) {
-        List<LocalPlayer> wgPlayers = Bukkit.getServer().getOnlinePlayers().stream().map(player -> WorldGuardPlugin.inst().wrapPlayer(player)).collect(Collectors.toList());
+        List<LocalPlayer> wgPlayers = MultiLib.getAllOnlinePlayers().stream().map(player -> WorldGuardPlugin.inst().wrapPlayer(player)).collect(Collectors.toList());
 
         filter = filter.toLowerCase();
 
@@ -152,11 +153,11 @@ public class BukkitStringMatcher implements StringMatcher {
 
     @Override
     public Iterable<? extends LocalPlayer> matchPlayers(Actor source, String filter) throws CommandException {
-        if (Bukkit.getServer().getOnlinePlayers().isEmpty()) {
+        if (MultiLib.getAllOnlinePlayers().isEmpty()) {
             throw new CommandException("No players matched query.");
         }
 
-        List<LocalPlayer> wgPlayers = Bukkit.getServer().getOnlinePlayers().stream().map(player -> WorldGuardPlugin.inst().wrapPlayer(player)).collect(Collectors.toList());
+        List<LocalPlayer> wgPlayers = MultiLib.getAllOnlinePlayers().stream().map(player -> WorldGuardPlugin.inst().wrapPlayer(player)).collect(Collectors.toList());
 
         if (filter.equals("*")) {
             return checkPlayerMatch(wgPlayers);
@@ -227,7 +228,7 @@ public class BukkitStringMatcher implements StringMatcher {
 
     @Override
     public String replaceMacros(Actor sender, String message) {
-        Collection<? extends Player> online = Bukkit.getServer().getOnlinePlayers();
+        Collection<? extends Player> online = MultiLib.getAllOnlinePlayers();
 
         message = message.replace("%name%", sender.getName());
         message = message.replace("%id%", sender.getUniqueId().toString());

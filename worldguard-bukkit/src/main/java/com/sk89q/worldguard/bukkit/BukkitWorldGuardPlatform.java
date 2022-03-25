@@ -19,6 +19,7 @@
 
 package com.sk89q.worldguard.bukkit;
 
+import com.github.puregero.multilib.MultiLib;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.math.BlockVector3;
@@ -110,7 +111,7 @@ public class BukkitWorldGuardPlatform implements WorldGuardPlatform {
     public void broadcastNotification(String message) {
         Bukkit.broadcast(message, "worldguard.notify");
         Set<Permissible> subs = Bukkit.getPluginManager().getPermissionSubscriptions("worldguard.notify");
-        for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+        for (Player player : MultiLib.getAllOnlinePlayers()) {
             if (!(subs.contains(player) && player.hasPermission("worldguard.notify")) &&
                     WorldGuardPlugin.inst().hasPermission(player, "worldguard.notify")) { // Make sure the player wasn't already broadcasted to.
                 player.sendMessage(message);
@@ -122,7 +123,7 @@ public class BukkitWorldGuardPlatform implements WorldGuardPlatform {
     @Override
     public void broadcastNotification(TextComponent component) {
         List<LocalPlayer>
-                wgPlayers = Bukkit.getServer().getOnlinePlayers().stream().map(player -> WorldGuardPlugin.inst().wrapPlayer(player)).collect(
+                wgPlayers = MultiLib.getAllOnlinePlayers().stream().map(player -> WorldGuardPlugin.inst().wrapPlayer(player)).collect(
                 Collectors.toList());
 
         for (LocalPlayer player : wgPlayers) {

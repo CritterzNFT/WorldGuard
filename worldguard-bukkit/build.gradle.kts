@@ -20,6 +20,10 @@ repositories {
         name = "aikar-timings"
         url = uri("https://repo.aikar.co/nexus/content/groups/aikar/")
     }
+    maven {
+        name = "multilib"
+        url = uri("https://repo.clojars.org/")
+    }
 }
 
 configurations {
@@ -38,6 +42,7 @@ dependencies {
     "shadeOnly"("io.papermc:paperlib:1.0.7")
     "shadeOnly"("org.bstats:bstats-bukkit:2.1.0")
     "shadeOnly"("co.aikar:minecraft-timings:1.0.4")
+    "shadeOnly"("com.github.puregero:multilib:1.1.2")
 }
 
 tasks.named<Copy>("processResources") {
@@ -69,6 +74,9 @@ tasks.named<ShadowJar>("shadowJar") {
         }
         relocate ("co.aikar.timings.lib", "com.sk89q.worldguard.bukkit.timingslib") {
             include(dependency("co.aikar:minecraft-timings"))
+        }
+        relocate ("com.github.puregero.multilib", "com.sk89q.worldguard.bukkit.multilib") {
+            include(dependency("com.github.puregero:multilib"))
         }
     }
 }
