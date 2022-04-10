@@ -86,6 +86,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -164,6 +165,7 @@ public final class RegionCommands extends RegionCommandsBase {
         task.addOwnersFromCommand(args, 2);
 
         final String description = String.format("Adding region '%s'", region.getId());
+        try {
         AsyncCommandBuilder.wrap(task, sender)
                 .registerWithSupervisor(worldGuard.getSupervisor(), description)
                 .onSuccess((Component) null,
@@ -174,7 +176,10 @@ public final class RegionCommands extends RegionCommandsBase {
                             checkSpawnOverlap(sender, world, region);
                         })
                 .onFailure(String.format("Failed to add the region '%s'", region.getId()), worldGuard.getExceptionConverter())
-                .buildAndExec(worldGuard.getExecutorService());
+                .buildAndExec(worldGuard.getExecutorService()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CommandException(e);
+        }
     }
 
     /**
@@ -217,6 +222,7 @@ public final class RegionCommands extends RegionCommandsBase {
         RegionAdder task = new RegionAdder(manager, region);
 
         final String description = String.format("Updating region '%s'", region.getId());
+        try {
         AsyncCommandBuilder.wrap(task, sender)
                 .registerWithSupervisor(worldGuard.getSupervisor(), description)
                 .sendMessageAfterDelay("(Please wait... " + description + ")")
@@ -228,7 +234,10 @@ public final class RegionCommands extends RegionCommandsBase {
                             checkSpawnOverlap(sender, world, region);
                         })
                 .onFailure(String.format("Failed to update the region '%s'", region.getId()), worldGuard.getExceptionConverter())
-                .buildAndExec(worldGuard.getExecutorService());
+                .buildAndExec(worldGuard.getExecutorService()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CommandException(e);
+        }
     }
 
     /**
@@ -335,12 +344,16 @@ public final class RegionCommands extends RegionCommandsBase {
         task.setOwnersInput(new String[]{player.getName()});
 
         final String description = String.format("Claiming region '%s'", id);
+        try {
         AsyncCommandBuilder.wrap(task, sender)
                 .registerWithSupervisor(WorldGuard.getInstance().getSupervisor(), description)
                 .sendMessageAfterDelay("(Please wait... " + description + ")")
                 .onSuccess(TextComponent.of(String.format("A new region has been claimed named '%s'.", id)), null)
                 .onFailure("Failed to claim region", WorldGuard.getInstance().getExceptionConverter())
-                .buildAndExec(WorldGuard.getInstance().getExecutorService());
+                .buildAndExec(WorldGuard.getInstance().getExecutorService()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CommandException(e);
+        }
     }
 
     /**
@@ -433,6 +446,7 @@ public final class RegionCommands extends RegionCommandsBase {
         RegionPrintoutBuilder printout = new RegionPrintoutBuilder(world.getName(), existing,
                 args.hasFlag('u') ? null : WorldGuard.getInstance().getProfileCache(), sender);
 
+        try {
         AsyncCommandBuilder.wrap(printout, sender)
                 .registerWithSupervisor(WorldGuard.getInstance().getSupervisor(), "Fetching region info")
                 .sendMessageAfterDelay("(Please wait... fetching region information...)")
@@ -441,7 +455,10 @@ public final class RegionCommands extends RegionCommandsBase {
                     checkSpawnOverlap(sender, world, existing);
                 })
                 .onFailure("Failed to fetch region information", WorldGuard.getInstance().getExceptionConverter())
-                .buildAndExec(WorldGuard.getInstance().getExecutorService());
+                .buildAndExec(WorldGuard.getInstance().getExecutorService()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CommandException(e);
+        }
     }
 
     /**
@@ -501,11 +518,15 @@ public final class RegionCommands extends RegionCommandsBase {
             task.filterIdByMatch(args.getFlag('i'));
         }
 
+        try {
         AsyncCommandBuilder.wrap(task, sender)
                 .registerWithSupervisor(WorldGuard.getInstance().getSupervisor(), "Getting region list")
                 .sendMessageAfterDelay("(Please wait... fetching region list...)")
                 .onFailure("Failed to fetch region list", WorldGuard.getInstance().getExceptionConverter())
-                .buildAndExec(WorldGuard.getInstance().getExecutorService());
+                .buildAndExec(WorldGuard.getInstance().getExecutorService()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CommandException(e);
+        }
     }
 
     /**
@@ -553,12 +574,16 @@ public final class RegionCommands extends RegionCommandsBase {
         // We didn't find the flag, so let's print a list of flags that the user
         // can use, and do nothing afterwards
         if (foundFlag == null) {
+            try {
             AsyncCommandBuilder.wrap(new FlagListBuilder(flagRegistry, permModel, existing, world,
                                                          regionId, sender, flagName), sender)
                     .registerWithSupervisor(WorldGuard.getInstance().getSupervisor(), "Flag list for invalid flag command.")
                     .onSuccess((Component) null, sender::print)
                     .onFailure((Component) null, WorldGuard.getInstance().getExceptionConverter())
-                    .buildAndExec(WorldGuard.getInstance().getExecutorService());
+                    .buildAndExec(WorldGuard.getInstance().getExecutorService()).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new CommandException(e);
+            }
             return;
         } else if (value != null) {
             if (foundFlag == Flags.BUILD || foundFlag == Flags.BLOCK_BREAK || foundFlag == Flags.BLOCK_PLACE) {
@@ -695,6 +720,7 @@ public final class RegionCommands extends RegionCommandsBase {
         if (!sender.isPlayer()) {
             flagHelperBox.tryMonoSpacing();
         }
+        try {
         AsyncCommandBuilder.wrap(() -> {
                     if (checkSpawnOverlap(sender, world, region)) {
                         flagHelperBox.setComponentsPerPage(15);
@@ -703,7 +729,10 @@ public final class RegionCommands extends RegionCommandsBase {
                 }, sender)
                 .onSuccess((Component) null, sender::print)
                 .onFailure("Failed to get region flags", WorldGuard.getInstance().getExceptionConverter())
-                .buildAndExec(WorldGuard.getInstance().getExecutorService());
+                .buildAndExec(WorldGuard.getInstance().getExecutorService()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -842,6 +871,7 @@ public final class RegionCommands extends RegionCommandsBase {
         }
 
         final String description = String.format("Removing region '%s' in '%s'", existing.getId(), world.getName());
+        try {
         AsyncCommandBuilder.wrap(task, sender)
                 .registerWithSupervisor(WorldGuard.getInstance().getSupervisor(), description)
                 .sendMessageAfterDelay("Please wait... removing region.")
@@ -849,7 +879,10 @@ public final class RegionCommands extends RegionCommandsBase {
                         "Successfully removed " + removed.stream().map(ProtectedRegion::getId).collect(Collectors.joining(", ")) + ".",
                         TextColor.LIGHT_PURPLE)))
                 .onFailure("Failed to remove region", WorldGuard.getInstance().getExceptionConverter())
-                .buildAndExec(WorldGuard.getInstance().getExecutorService());
+                .buildAndExec(WorldGuard.getInstance().getExecutorService()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CommandException(e);
+        }
     }
 
     /**
@@ -886,12 +919,16 @@ public final class RegionCommands extends RegionCommandsBase {
             }
 
             final String description = String.format("Loading region data for '%s'.", world.getName());
+            try {
             AsyncCommandBuilder.wrap(new RegionManagerLoader(manager), sender)
                     .registerWithSupervisor(worldGuard.getSupervisor(), description)
                     .sendMessageAfterDelay("Please wait... " + description)
                     .onSuccess(String.format("Loaded region data for '%s'", world.getName()), null)
                     .onFailure(String.format("Failed to load region data for '%s'", world.getName()), worldGuard.getExceptionConverter())
-                    .buildAndExec(worldGuard.getExecutorService());
+                    .buildAndExec(worldGuard.getExecutorService()).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new CommandException(e);
+            }
         } else {
             // Load regions for all worlds
             List<RegionManager> managers = new ArrayList<>();
@@ -903,12 +940,16 @@ public final class RegionCommands extends RegionCommandsBase {
                 }
             }
 
+            try {
             AsyncCommandBuilder.wrap(new RegionManagerLoader(managers), sender)
                     .registerWithSupervisor(worldGuard.getSupervisor(), "Loading regions for all worlds")
                     .sendMessageAfterDelay("(Please wait... loading region data for all worlds...)")
                     .onSuccess("Successfully load the region data for all worlds.", null)
                     .onFailure("Failed to load regions for all worlds", worldGuard.getExceptionConverter())
-                    .buildAndExec(worldGuard.getExecutorService());
+                    .buildAndExec(worldGuard.getExecutorService()).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new CommandException(e);
+            }
         }
     }
 
@@ -946,12 +987,16 @@ public final class RegionCommands extends RegionCommandsBase {
             }
 
             final String description = String.format("Saving region data for '%s'.", world.getName());
+            try {
             AsyncCommandBuilder.wrap(new RegionManagerSaver(manager), sender)
                     .registerWithSupervisor(worldGuard.getSupervisor(), description)
                     .sendMessageAfterDelay("Please wait... " + description)
                     .onSuccess(String.format("Saving region data for '%s'", world.getName()), null)
                     .onFailure(String.format("Failed to save region data for '%s'", world.getName()), worldGuard.getExceptionConverter())
-                    .buildAndExec(worldGuard.getExecutorService());
+                    .buildAndExec(worldGuard.getExecutorService()).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new CommandException(e);
+            }
         } else {
             // Save for all worlds
             List<RegionManager> managers = new ArrayList<>();
@@ -964,12 +1009,16 @@ public final class RegionCommands extends RegionCommandsBase {
                 }
             }
 
+            try {
             AsyncCommandBuilder.wrap(new RegionManagerSaver(managers), sender)
                     .registerWithSupervisor(worldGuard.getSupervisor(), "Saving regions for all worlds")
                     .sendMessageAfterDelay("(Please wait... saving region data for all worlds...)")
                     .onSuccess("Successfully saved the region data for all worlds.", null)
                     .onFailure("Failed to save regions for all worlds", worldGuard.getExceptionConverter())
-                    .buildAndExec(worldGuard.getExecutorService());
+                    .buildAndExec(worldGuard.getExecutorService()).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new CommandException(e);
+            }
         }
     }
 
